@@ -79,6 +79,43 @@ uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
         }
     return data_out;
 }
+// Sobel 4 : Prog dynamique
+// 
+uchar* sobel4(int width, int height, uchar* data_in, uchar* data_out)
+{
+    int i,j;
+    int tmp_v;
+    int tmp_h;
+    uchar a,b,c,d;
+ 	uchar h1,h2,v1,v2,tmp;
+	
+	
+	
+	for (i=1; i<height-1;i++){
+		a = data_in[addr(0,i-1)];
+		c = data_in[addr(0,i+1)];
+    	h1 = data_in[addr(1,i-1)];
+		h2 = data_in[addr(1,i+1)];
+		v1 = data_in[addr(0,i)];
+		tmp = data_in[addr(1,i)];
+        
+		for(j=1;j<width-1;j++){
+			b = data_in[addr(j+1,i-1)];
+			v2 = data_in[addr(j+1,i)];
+			d = data_in[addr(j+1,i+1)];
+            // Sobel
+			tmp_v = - a -2*v1 - c + b +2*v2 + d;
+            tmp_h = - a -2*h1 - b + c +2*h2 + d;
+            data_out[addr(j,i)] = value( abs(tmp_h) + abs(tmp_v) );
+			//update valeurs
+			a = h1; c = h2;
+			h1 = b; h2 = d;
+			tmp = v2; v1 = tmp;
+
+        }
+	}
+    return data_out;
+}
 // sort_median : optimisation tri diagonal
 // Average median filter duration: 319.333ms
 uchar sort_median(uchar data[9]){
@@ -112,7 +149,8 @@ uchar sort_median(uchar data[9]){
 }
 
 
-
+// Median 1 : Sans optimisation
+// Average median filter duration: 319.333ms
 uchar* median_filter(int width, int height, uchar* in, uchar* out)
 {
     uchar tmp[9];
@@ -129,6 +167,32 @@ uchar* median_filter(int width, int height, uchar* in, uchar* out)
         }
     return out;
 }
+// Median 2 : Prog dynamique
+// Average median filter duration: 229.277ms
+uchar* median_filter2(int width, int height, uchar* in, uchar* out)
+{
+    uchar t[9];
+    int i,j;
+    for (i=1; i<height-1;i++){
+		t[0]=in[addr(0,i-1)]; t[1]=in[addr(1,i-1)]; t[2]=in[addr(2,i-1)];
+		t[3]=in[addr(0, i )]; t[4]=in[addr(1, i )]; t[5]=in[addr(2, i )];
+		t[6]=in[addr(0,i+1)]; t[7]=in[addr(1,i+1)]; t[8]=in[addr(2,i+1)];
+
+        for(j=1;j<width-1;j++){
+			t[2] = in[addr(j+1,i-1)];
+			t[5] = in[addr(j+1, i )];
+			t[8] = in[addr(j+1,i+1)];
+
+       		out[addr(j,i)] = sort_median(t);
+			t[0]=t[1]; t[1]=t[2]; 
+			t[3]=t[4]; t[4]=t[5]; 
+			t[6]=t[7]; t[7]=t[8]; 
+
+        }
+	}
+    return out;
+}
+
 
 
 
@@ -212,26 +276,27 @@ int main() {
             for (j=0;j<width;j++)
             {
                 // Gris = 0.3*R + 0.59*G + 0.11*B;
-                im_1_data[addr(j,i)] =     0.114*im_in_data[addr_c(j,i,0)] +
-                    0.587*im_in_data[addr_c(j,i,1)] +
-                    0.299*im_in_data[addr_c(j,i,2)];
+                im_1_data[addr(j,i)] =   //  0.114*im_in_data[addr_c(j,i,0)] +
+                   /* 0.587* */im_in_data[addr_c(j,i,1)]; // +
+                   // 0.299*im_in_data[addr_c(j,i,2)];
             }
 
         int64 median_start = cv::getTickCount();
-        im_2_data = median_filter(width, height, im_1_data, im_2_data); // Median
+        im_2_data = median_filter2(width, height, im_1_data, im_2_data); // Median
         median_time += (double)(cv::getTickCount() - median_start) / cv::getTickFrequency();
 
 
         int64 sobel_start = cv::getTickCount();
-        im_4_data = sobel3(width, height, im_2_data, im_4_data); // Median + Sobel
+        im_4_data = sobel4(width, height, im_2_data, im_4_data); // Median + Sobel
         sobel_time += (double)(cv::getTickCount() - sobel_start) / cv::getTickFrequency();
         /********************************************************/
 
         /********************************************************/
 
-        cvShowImage( "Median & Sobel", im_4);
-        cvShowImage( "Noir & Blanc", im_1);
-        cvShowImage( "Median", im_2);
+         
+       	cvShowImage( "Noir & Blanc", im_1);
+       	cvShowImage( "Median", im_2);
+		cvShowImage( "Median & Sobel", im_4);
 
         cvWaitKey(10);
 
