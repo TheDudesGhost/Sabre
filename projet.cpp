@@ -17,6 +17,8 @@
 #define addr(x,y) ((y)*width + (x))
 #define value(x) ((x > 90) ? 255 : 0)
 
+// Sobel1 : sans optimisation
+// Average sobel filter duration: 178.184ms
 uchar* sobel(int width, int height, uchar* data_in, uchar* data_out)
 {
     int i,j;
@@ -34,7 +36,27 @@ uchar* sobel(int width, int height, uchar* data_in, uchar* data_out)
         }
     return data_out;
 }
+// Sobel2 : Approx sqrt -> abs
+// Average sobel filter duration: 57.1648ms
+uchar* sobel2(int width, int height, uchar* data_in, uchar* data_out)
+{
+    int i,j;
+    int tmp_v;
+    int tmp_h;
 
+    for (i=1; i<height-1;i++)
+        for(j=1;j<width-1;j++){
+            tmp_v =     -1*data_in[addr(j-1,i-1)] -2*data_in[addr(j-1,i)] -1*data_in[addr(j-1,i+1)]
+                +1*data_in[addr(j+1,i-1)] +2*data_in[addr(j+1,i)] +1*data_in[addr(j+1,i+1)];
+            tmp_h =     -1*data_in[addr(j-1,i-1)] -2*data_in[addr(j,i-1)] -1*data_in[addr(j+1,i-1)]
+                +1*data_in[addr(j-1,i+1)] +2*data_in[addr(j,i+1)] +1*data_in[addr(j+1,i+1)];
+
+            data_out[addr(j,i)] = value( abs(tmp_h) + abs(tmp_v) );
+        }
+    return data_out;
+}
+// sort_median : optimisation tri diagonal
+// Average median filter duration: 319.333ms
 uchar sort_median(uchar data[9]){
     int i,j;
     uchar tmp;
@@ -175,10 +197,9 @@ int main() {
         im_2_data = median_filter(width, height, im_1_data, im_2_data); // Median
         median_time += (double)(cv::getTickCount() - median_start) / cv::getTickFrequency();
 
-        im_3_data = sobel(width, height, im_1_data, im_3_data); // Sobel
 
         int64 sobel_start = cv::getTickCount();
-        im_4_data = sobel(width, height, im_2_data, im_4_data); // Median + Sobel
+        im_4_data = sobel2(width, height, im_2_data, im_4_data); // Median + Sobel
         sobel_time += (double)(cv::getTickCount() - sobel_start) / cv::getTickFrequency();
         /********************************************************/
 
@@ -187,7 +208,6 @@ int main() {
         cvShowImage( "Median & Sobel", im_4);
         cvShowImage( "Noir & Blanc", im_1);
         cvShowImage( "Median", im_2);
-        cvShowImage( "Sobel", im_3);
 
         cvWaitKey(10);
 
