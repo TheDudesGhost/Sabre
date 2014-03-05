@@ -9,6 +9,7 @@
 #include "highgui.h"
 #include "cv.h"
 #include <math.h>
+#include <iostream>
 
 #define N_frames 100
 
@@ -37,16 +38,34 @@ uchar* sobel(int width, int height, uchar* data_in, uchar* data_out)
 uchar sort_median(uchar data[9]){
     int i,j;
     uchar tmp;
-    for(i=1; i<9;i++)
-        for(j=1; j<9; j++){
-            if(data[j-1]>data[j]){
-                tmp = data[j-1];
-                data[j-1] = data[j];
-                data[j] = tmp;
-            }
-        }
+    for(i=0; i<9;i=i+3) {
+        if (data[i]>data[i+1])
+            std::swap(data[i],data[i+1]);
+        if (data[i+1]>data[i+2])
+            std::swap(data[i],data[i+1]);
+        if (data[i]>data[i+1])
+            std::swap(data[i],data[i+1]);
+    }
+    for(i=0; i<3;i++) {
+        if (data[i]>data[i+3])
+            std::swap(data[i],data[i+3]);
+        if (data[i+3]>data[i+6])
+            std::swap(data[i+3],data[i+6]);
+        if (data[i]>data[i+3])
+            std::swap(data[i],data[i+3]);
+    }
+    
+    if (data[2]>data[4])
+            std::swap(data[2],data[4]);
+    if (data[4]>data[6])
+            std::swap(data[4],data[6]);
+    if (data[2]>data[4])
+            std::swap(data[2],data[4]);   
+
     return data[4];
 }
+
+
 
 uchar* median_filter(int width, int height, uchar* in, uchar* out)
 {
