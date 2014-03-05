@@ -55,6 +55,30 @@ uchar* sobel2(int width, int height, uchar* data_in, uchar* data_out)
         }
     return data_out;
 }
+// Sobel 3 : 4 acces memoire en moins par iteration
+// Average sobel filter duration: 47.6487ms
+uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
+{
+    int i,j;
+    int tmp_v;
+    int tmp_h;
+    uchar a,b,c,d;
+ 
+
+    for (i=1; i<height-1;i++)
+        for(j=1;j<width-1;j++){
+			a = data_in[addr(j-1,i-1)];
+			b = data_in[addr(j+1,i-1)];
+			c = data_in[addr(j-1,i+1)];
+			d = data_in[addr(j+1,i+1)];
+
+            tmp_v =     - a -2*data_in[addr(j-1,i)] - c + b +2*data_in[addr(j+1,i)] + d;
+            tmp_h =     - a -2*data_in[addr(j,i-1)] - b + c +2*data_in[addr(j,i+1)] + d;
+
+            data_out[addr(j,i)] = value( abs(tmp_h) + abs(tmp_v) );
+        }
+    return data_out;
+}
 // sort_median : optimisation tri diagonal
 // Average median filter duration: 319.333ms
 uchar sort_median(uchar data[9]){
@@ -199,7 +223,7 @@ int main() {
 
 
         int64 sobel_start = cv::getTickCount();
-        im_4_data = sobel2(width, height, im_2_data, im_4_data); // Median + Sobel
+        im_4_data = sobel3(width, height, im_2_data, im_4_data); // Median + Sobel
         sobel_time += (double)(cv::getTickCount() - sobel_start) / cv::getTickFrequency();
         /********************************************************/
 
