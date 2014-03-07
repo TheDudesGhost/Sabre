@@ -64,7 +64,7 @@ void sobel3(int width, int height, uchar* data_in, uchar* data_out, int y_start,
     int tmp_v;
     int tmp_h;
     uchar a,b,c,d;
- 
+
 
     for (i=y_start; i<y_stop;i++)
         for(j=1;j<width-1;j++){
@@ -88,9 +88,9 @@ void sobel4(int width, int height, uchar* data_in, uchar* data_out, int y_start,
     int tmp_h;
     uchar a,b,c,d;
  	uchar h1,h2,v1,v2,tmp;
-	
-	
-	
+
+
+
 	for (i=y_start; i<y_stop;i++){
 		a = data_in[addr(0,i-1)];
 		c = data_in[addr(0,i+1)];
@@ -98,7 +98,7 @@ void sobel4(int width, int height, uchar* data_in, uchar* data_out, int y_start,
 		h2 = data_in[addr(1,i+1)];
 		v1 = data_in[addr(0,i)];
 		tmp = data_in[addr(1,i)];
-        
+
 		for(j=1;j<width-1;j++){
 			b = data_in[addr(j+1,i-1)];
 			v2 = data_in[addr(j+1,i)];
@@ -136,13 +136,13 @@ uchar sort_median(uchar data[9]){
         if (data[i]>data[i+3])
             std::swap(data[i],data[i+3]);
     }
-    
+
     if (data[2]>data[4])
             std::swap(data[2],data[4]);
     if (data[4]>data[6])
             std::swap(data[4],data[6]);
     if (data[2]>data[4])
-            std::swap(data[2],data[4]);   
+            std::swap(data[2],data[4]);
 
     return data[4];
 }
@@ -164,7 +164,7 @@ uchar qselect(uchar *v, int len, int k)
 }
 
 // Sort_median : quick select
-// 350 ms 
+// 350 ms
 uchar sort_median2(uchar data[9]){
 	return qselect(&data[0],9,4);
 }
@@ -203,9 +203,9 @@ void median_filter2(int width, int height, uchar* in, uchar* out, int y_start, i
 			t[8] = in[addr(j+1,i+1)];
 
        		out[addr(j,i)] = sort_median(t);
-			t[0]=t[1]; t[1]=t[2]; 
-			t[3]=t[4]; t[4]=t[5]; 
-			t[6]=t[7]; t[7]=t[8]; 
+			t[0]=t[1]; t[1]=t[2];
+			t[3]=t[4]; t[4]=t[5];
+			t[6]=t[7]; t[7]=t[8];
 
         }
 	}
@@ -222,7 +222,7 @@ void median_filter3(int width, int height, uchar* in, uchar* out, int y_start, i
 		t[0]=in[addr(0,i-1)]; t[1]=in[addr(1,i-1)]; //t[2]=in[addr(2,i-1)];
 		t[3]=in[addr(0, i )]; t[4]=in[addr(1, i )]; //t[5]=in[addr(2, i )];
 		t[6]=in[addr(0,i+1)]; t[7]=in[addr(1,i+1)]; //t[8]=in[addr(2,i+1)];
-		
+
 		n[0]=t[1]; n[1]=t[2]; //n[2]=in[addr(3,i-1)];
 		n[3]=t[4]; n[4]=t[5]; //n[5]=in[addr(3, i )];
         n[6]=t[7]; n[7]=t[8]; //n[8]=in[addr(3,i+1)];
@@ -231,7 +231,7 @@ void median_filter3(int width, int height, uchar* in, uchar* out, int y_start, i
 			t[2] = in[addr(j+1,i-1)];
 			t[5] = in[addr(j+1, i )];
 			t[8] = in[addr(j+1,i+1)];
-			
+
 			n[2] = in[addr(j+2,i-1)];
 			n[5] = in[addr(j+2, i )];
         	n[8] = in[addr(j+2,i+1)];
@@ -240,10 +240,10 @@ void median_filter3(int width, int height, uchar* in, uchar* out, int y_start, i
        		out[addr( j ,i)] = sort_median(t);
 			out[addr(j+1,i)] = sort_median(n);
 
-			t[0]=n[1]; t[1]=n[2]; 
-			t[3]=n[4]; t[4]=n[5]; 
-			t[6]=n[7]; t[7]=n[8]; 
-			
+			t[0]=n[1]; t[1]=n[2];
+			t[3]=n[4]; t[4]=n[5];
+			t[6]=n[7]; t[7]=n[8];
+
 			n[0]=t[1]; n[1]=t[2];
 			n[3]=t[4]; n[4]=t[5];
         	n[6]=t[7]; n[7]=t[8];
@@ -373,7 +373,7 @@ int main() {
 
         /********************************************************/
 
-         
+
        	cvShowImage( "Noir & Blanc", im_1);
        	cvShowImage( "Median", im_2);
 		cvShowImage( "Median & Sobel", im_4);
