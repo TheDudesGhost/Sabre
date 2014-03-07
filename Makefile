@@ -1,2 +1,2 @@
 all:
-	g++ `pkg-config opencv --cflags --libs` -O3 projet.cpp -o projet
+	g++ -std=c++0x -pthread `pkg-config opencv --cflags` projet.cpp -o projet `pkg-config opencv --libs`

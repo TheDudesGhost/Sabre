@@ -5,6 +5,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <thread>
+#include <atomic>
+#include <future>
 
 #include "highgui.h"
 #include "cv.h"
@@ -19,13 +22,13 @@
 
 // Sobel1 : sans optimisation
 // Average sobel filter duration: 178.184ms
-uchar* sobel(int width, int height, uchar* data_in, uchar* data_out)
+void sobel(int width, int height, uchar* data_in, uchar* data_out, int y_start, int y_stop)
 {
     int i,j;
     int tmp_v;
     int tmp_h;
 
-    for (i=1; i<height-1;i++)
+    for (i=y_start; i<y_stop;i++)
         for(j=1;j<width-1;j++){
             tmp_v =     -1*data_in[addr(j-1,i-1)] -2*data_in[addr(j-1,i)] -1*data_in[addr(j-1,i+1)]
                 +1*data_in[addr(j+1,i-1)] +2*data_in[addr(j+1,i)] +1*data_in[addr(j+1,i+1)];
@@ -34,17 +37,16 @@ uchar* sobel(int width, int height, uchar* data_in, uchar* data_out)
 
             data_out[addr(j,i)] = value( sqrt( pow(tmp_h,2) + pow(tmp_v,2) ) );
         }
-    return data_out;
 }
 // Sobel2 : Approx sqrt -> abs
 // Average sobel filter duration: 57.1648ms
-uchar* sobel2(int width, int height, uchar* data_in, uchar* data_out)
+void sobel2(int width, int height, uchar* data_in, uchar* data_out, int y_start, int y_stop)
 {
     int i,j;
     int tmp_v;
     int tmp_h;
 
-    for (i=1; i<height-1;i++)
+    for (i=y_start; i<y_stop;i++)
         for(j=1;j<width-1;j++){
             tmp_v =     -1*data_in[addr(j-1,i-1)] -2*data_in[addr(j-1,i)] -1*data_in[addr(j-1,i+1)]
                 +1*data_in[addr(j+1,i-1)] +2*data_in[addr(j+1,i)] +1*data_in[addr(j+1,i+1)];
@@ -53,11 +55,10 @@ uchar* sobel2(int width, int height, uchar* data_in, uchar* data_out)
 
             data_out[addr(j,i)] = value( abs(tmp_h) + abs(tmp_v) );
         }
-    return data_out;
 }
 // Sobel 3 : 4 acces memoire en moins par iteration
 // Average sobel filter duration: 47.6487ms
-uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
+void sobel3(int width, int height, uchar* data_in, uchar* data_out, int y_start, int y_stop)
 {
     int i,j;
     int tmp_v;
@@ -65,7 +66,7 @@ uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
     uchar a,b,c,d;
  
 
-    for (i=1; i<height-1;i++)
+    for (i=y_start; i<y_stop;i++)
         for(j=1;j<width-1;j++){
 			a = data_in[addr(j-1,i-1)];
 			b = data_in[addr(j+1,i-1)];
@@ -77,11 +78,10 @@ uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
 
             data_out[addr(j,i)] = value( abs(tmp_h) + abs(tmp_v) );
         }
-    return data_out;
 }
 // Sobel 4 : Prog dynamique
 // Average sobel filter duration: 37.9785ms
-uchar* sobel4(int width, int height, uchar* data_in, uchar* data_out)
+void sobel4(int width, int height, uchar* data_in, uchar* data_out, int y_start, int y_stop)
 {
     int i,j;
     int tmp_v;
@@ -91,7 +91,7 @@ uchar* sobel4(int width, int height, uchar* data_in, uchar* data_out)
 	
 	
 	
-	for (i=1; i<height-1;i++){
+	for (i=y_start; i<y_stop;i++){
 		a = data_in[addr(0,i-1)];
 		c = data_in[addr(0,i+1)];
     	h1 = data_in[addr(1,i-1)];
@@ -172,11 +172,11 @@ uchar sort_median2(uchar data[9]){
 
 // Median 1 : Sans optimisation
 // Average median filter duration: 319.333ms
-uchar* median_filter(int width, int height, uchar* in, uchar* out)
+uchar* median_filter(int width, int height, uchar* in, uchar* out, int y_start, int y_stop)
 {
     uchar tmp[9];
     int i,j,k,l,m;
-    for (i=1; i<height-1;i++)
+    for (i=y_start; i<y_stop;i++)
         for(j=1;j<width-1;j++)
         {
             m = 0;
@@ -186,15 +186,14 @@ uchar* median_filter(int width, int height, uchar* in, uchar* out)
                 }
             out[addr(j,i)] = sort_median(tmp);
         }
-    return out;
 }
 // Median 2 : Prog dynamique
 // Average median filter duration: 229.277ms
-uchar* median_filter2(int width, int height, uchar* in, uchar* out)
+void median_filter2(int width, int height, uchar* in, uchar* out, int y_start, int y_stop)
 {
     uchar t[9];
     int i,j;
-    for (i=1; i<height-1;i++){
+    for (i=y_start; i<y_stop;i++){
 		t[0]=in[addr(0,i-1)]; t[1]=in[addr(1,i-1)]; t[2]=in[addr(2,i-1)];
 		t[3]=in[addr(0, i )]; t[4]=in[addr(1, i )]; t[5]=in[addr(2, i )];
 		t[6]=in[addr(0,i+1)]; t[7]=in[addr(1,i+1)]; t[8]=in[addr(2,i+1)];
@@ -211,17 +210,16 @@ uchar* median_filter2(int width, int height, uchar* in, uchar* out)
 
         }
 	}
-    return out;
 }
 
 // Median 3 : Prog dynamique + deroulage de boucle
 // Average median filter duration: 199.34ms
-uchar* median_filter3(int width, int height, uchar* in, uchar* out)
+void median_filter3(int width, int height, uchar* in, uchar* out, int y_start, int y_stop)
 {
     uchar t[9]; // Premiere boucle
 	uchar n[9]; // Seconde Boucle
     int i,j;
-    for (i=1; i<height-1;i++){
+    for (i=y_start; i<y_stop;i++){
 		t[0]=in[addr(0,i-1)]; t[1]=in[addr(1,i-1)]; //t[2]=in[addr(2,i-1)];
 		t[3]=in[addr(0, i )]; t[4]=in[addr(1, i )]; //t[5]=in[addr(2, i )];
 		t[6]=in[addr(0,i+1)]; t[7]=in[addr(1,i+1)]; //t[8]=in[addr(2,i+1)];
@@ -323,6 +321,9 @@ int main() {
     double sobel_time = 0.0;
     double median_time = 0.0;
 
+    const unsigned cores = std::thread::hardware_concurrency();
+    std::vector<std::future<void>> results(cores);
+
     // Boucle de N_frames trames
     while(count_frames < N_frames) {
 
@@ -342,13 +343,32 @@ int main() {
                    // 0.299*im_in_data[addr_c(j,i,2)];
             }
 
+        // Median
         int64 median_start = cv::getTickCount();
-        im_2_data = median_filter3(width, height, im_1_data, im_2_data); // Median
+        for(unsigned i = 0; i < cores; i++) {
+            int h = height - 2;
+            int y_start = i * h / cores + 1,
+                y_stop = (i + 1) * h / cores + 1;
+            results[i] = std::async(std::launch::async, &median_filter3, width, height, im_1_data, im_2_data, y_start, y_stop);
+        }
+        for(unsigned i = 0; i < cores; i++) {
+            results[i].wait();
+        }
         median_time += (double)(cv::getTickCount() - median_start) / cv::getTickFrequency();
 
+        sobel(width, height, im_1_data, im_3_data, 1, height - 1); // Sobel
 
+        // Median + Sobel
         int64 sobel_start = cv::getTickCount();
-        im_4_data = sobel4(width, height, im_2_data, im_4_data); // Median + Sobel
+        for(unsigned i = 0; i < cores; i++) {
+            int h = height - 2;
+            int y_start = i * h / cores + 1,
+                y_stop = (i + 1) * h / cores + 1;
+            results[i] = std::async(std::launch::async, &sobel4, width, height, im_2_data, im_4_data, y_start, y_stop);
+        }
+        for(unsigned i = 0; i < cores; i++) {
+            results[i].wait();
+        }
         sobel_time += (double)(cv::getTickCount() - sobel_start) / cv::getTickFrequency();
         /********************************************************/
 
