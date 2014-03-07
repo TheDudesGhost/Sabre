@@ -80,7 +80,7 @@ uchar* sobel3(int width, int height, uchar* data_in, uchar* data_out)
     return data_out;
 }
 // Sobel 4 : Prog dynamique
-// 
+// Average sobel filter duration: 37.9785ms
 uchar* sobel4(int width, int height, uchar* data_in, uchar* data_out)
 {
     int i,j;
@@ -117,7 +117,7 @@ uchar* sobel4(int width, int height, uchar* data_in, uchar* data_out)
     return data_out;
 }
 // sort_median : optimisation tri diagonal
-// Average median filter duration: 319.333ms
+// Average median filter duration: 207.333ms
 uchar sort_median(uchar data[9]){
     int i,j;
     uchar tmp;
@@ -148,6 +148,27 @@ uchar sort_median(uchar data[9]){
     return data[4];
 }
 
+
+uchar qselect(uchar *v, int len, int k)
+{
+	#define SWAP(a, b) { tmp = v[a]; v[a] = v[b]; v[b] = tmp; }
+	int i, st, tmp;
+	for (st = i = 0; i < len - 1; i++) {
+		if (v[i] > v[len-1]) continue;
+			SWAP(i, st);
+			st++;
+	}
+	SWAP(len-1, st);
+	return k == st	?v[st]
+			:st > k	? qselect(v, st, k)
+			: qselect(v + st, len - st, k - st);
+}
+
+// Sort_median : quick select
+// 350 ms 
+uchar sort_median2(uchar data[9]){
+	return qselect(&data[0],9,4);
+}
 
 // Median 1 : Sans optimisation
 // Average median filter duration: 319.333ms
@@ -193,6 +214,46 @@ uchar* median_filter2(int width, int height, uchar* in, uchar* out)
     return out;
 }
 
+// Median 3 : Prog dynamique + deroulage de boucle
+// Average median filter duration: 199.34ms
+uchar* median_filter3(int width, int height, uchar* in, uchar* out)
+{
+    uchar t[9]; // Premiere boucle
+	uchar n[9]; // Seconde Boucle
+    int i,j;
+    for (i=1; i<height-1;i++){
+		t[0]=in[addr(0,i-1)]; t[1]=in[addr(1,i-1)]; //t[2]=in[addr(2,i-1)];
+		t[3]=in[addr(0, i )]; t[4]=in[addr(1, i )]; //t[5]=in[addr(2, i )];
+		t[6]=in[addr(0,i+1)]; t[7]=in[addr(1,i+1)]; //t[8]=in[addr(2,i+1)];
+		
+		n[0]=t[1]; n[1]=t[2]; //n[2]=in[addr(3,i-1)];
+		n[3]=t[4]; n[4]=t[5]; //n[5]=in[addr(3, i )];
+        n[6]=t[7]; n[7]=t[8]; //n[8]=in[addr(3,i+1)];
+
+		for(j=1;j<width-2;j=j+2){
+			t[2] = in[addr(j+1,i-1)];
+			t[5] = in[addr(j+1, i )];
+			t[8] = in[addr(j+1,i+1)];
+			
+			n[2] = in[addr(j+2,i-1)];
+			n[5] = in[addr(j+2, i )];
+        	n[8] = in[addr(j+2,i+1)];
+
+
+       		out[addr( j ,i)] = sort_median(t);
+			out[addr(j+1,i)] = sort_median(n);
+
+			t[0]=n[1]; t[1]=n[2]; 
+			t[3]=n[4]; t[4]=n[5]; 
+			t[6]=n[7]; t[7]=n[8]; 
+			
+			n[0]=t[1]; n[1]=t[2];
+			n[3]=t[4]; n[4]=t[5];
+        	n[6]=t[7]; n[7]=t[8];
+        }
+	}
+    return out;
+}
 
 
 
@@ -282,7 +343,7 @@ int main() {
             }
 
         int64 median_start = cv::getTickCount();
-        im_2_data = median_filter2(width, height, im_1_data, im_2_data); // Median
+        im_2_data = median_filter3(width, height, im_1_data, im_2_data); // Median
         median_time += (double)(cv::getTickCount() - median_start) / cv::getTickFrequency();
 
 
