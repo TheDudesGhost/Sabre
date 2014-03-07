@@ -322,6 +322,7 @@ int main() {
     double median_time = 0.0;
 
     const unsigned cores = std::thread::hardware_concurrency();
+    std::cout << "Using " << cores << " cores." << std::endl;
     std::vector<std::future<void>> results(cores);
 
     // Boucle de N_frames trames
