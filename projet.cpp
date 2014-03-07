@@ -9,8 +9,8 @@
 #include <atomic>
 #include <future>
 
-#include "highgui.h"
-#include "cv.h"
+#include <opencv/highgui.h>
+#include <opencv/cv.h>
 #include <math.h>
 #include <iostream>
 
@@ -114,7 +114,6 @@ void sobel4(int width, int height, uchar* data_in, uchar* data_out, int y_start,
 
         }
 	}
-    return data_out;
 }
 // sort_median : optimisation tri diagonal
 // Average median filter duration: 207.333ms
@@ -250,7 +249,6 @@ void median_filter3(int width, int height, uchar* in, uchar* out, int y_start, i
         	n[6]=t[7]; n[7]=t[8];
         }
 	}
-    return out;
 }
 
 
@@ -321,7 +319,7 @@ int main() {
     double sobel_time = 0.0;
     double median_time = 0.0;
 
-    const unsigned cores = std::thread::hardware_concurrency();
+    const unsigned cores = std::min(std::thread::hardware_concurrency(), (unsigned)1);
     std::cout << "Using " << cores << " cores." << std::endl;
     std::vector<std::future<void>> results(cores);
 
