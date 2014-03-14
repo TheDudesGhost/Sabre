@@ -319,7 +319,7 @@ int main() {
     double sobel_time = 0.0;
     double median_time = 0.0;
 
-    const unsigned cores = std::min(std::thread::hardware_concurrency(), (unsigned)1);
+    const unsigned cores = std::max(std::thread::hardware_concurrency(), (unsigned)1);
     std::cout << "Using " << cores << " cores." << std::endl;
     std::vector<std::future<void>> results(cores);
 
